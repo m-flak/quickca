@@ -1,0 +1,6 @@
+wxPython
+certbuilder
+cryptography
+oscrypto
+asn1crypto
+
