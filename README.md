@@ -38,6 +38,10 @@ The same as above applies here as well. However, don't forget to:
 	
 
     chmod a+x ./quickCA.py
+
+**(Linux Only)** Currently, for the *Explore Directory* menu option to you'll need to execute quickCA as follows:
+
+    QC_FM=/path/to/your/fm ./quickCA.py
    
 Changelog
 ============
