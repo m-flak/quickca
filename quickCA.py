@@ -156,6 +156,12 @@ class QCWindow(wx.Frame):
 		self.gen_ca = None
 		self.btn_tipku = None
 		self.btn_tipeku = None
+		self.req_create = None
+		self.cmd_create = None
+		
+		# csr stuff from the bottom part of the dialog box
+		# THESE ARE THE IDS THAT SHALL BE ASSIGNED TO THE CSR GEN ITEMS
+		self.csr_item_ids = [32449, 32448, 32447]
 		
 		#menu
 		self.mainmenu = self.createMainMenu()
@@ -188,15 +194,24 @@ class QCWindow(wx.Frame):
 	def setWorkspace(self, ws):
 		self.data_wspace = ws
 		return
+	
 	def hasWorkspace(self):
 		if self.data_wspace is None:
 			return False
 		return True
+	
 	# CA cert -> genned / loaded (T or F)
 	def genned_ca(self, da):
 		self.data_ca_made = da
 	
 	### GUI funcs ###
+	#enable csr items
+	def enableCSRItems(self):
+		for i in range(0, len(self.csr_item_ids)):
+			self.FindWindow(self.csr_item_ids[i]).Enable(True)
+		
+		return
+	
 	# create mainmenu
 	def createMainMenu(self):
 		mbar = wx.MenuBar()
@@ -218,6 +233,7 @@ class QCWindow(wx.Frame):
 	# create tooltips
 	def createTooltips(self):
 		return wx_stt.SuperToolTip("")	
+	
 	# create controls
 	def createControls(self):
 		self.SetBackgroundColour(wx.Colour(240,240,240))
@@ -280,6 +296,25 @@ class QCWindow(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.onClick_GenCA, self.gen_ca)
 		pan_box.Add(self.gen_ca,pos=(5,1),flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT|wx.LEFT,border=2)
 		pan_box.SetItemSpan(self.gen_ca, wx.GBSpan(1,2)) #	## Keep our GUI somewhat pretty
+		
+		# CSR Part of the GUI
+		## label
+		pan_box.Add(wx.StaticText(self, self.csr_item_ids[0], "Certificates from CSR: ", style=wx.ALIGN_LEFT),pos=(6,0),flag=wx.EXPAND|wx.LEFT|wx.RIGHT,border=2)
+		self.FindWindow(self.csr_item_ids[0]).Enable(False)
+		
+		## button 1
+		self.req_create = wx.Button(panel, self.csr_item_ids[1], label="Create Certificate from *.REQ",style=wx.ALIGN_CENTRE,name='req_create')
+		##
+		pan_box.Add(self.req_create,pos=(7,0),flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT|wx.LEFT,border=2)
+		pan_box.SetItemSpan(self.req_create, wx.GBSpan(1,4))
+		self.req_create.Enable(False)
+		
+		## button 2
+		self.cmd_create = wx.Button(panel, self.csr_item_ids[2], label="Create Certificate via OpenSSL Command",style=wx.ALIGN_CENTRE,name='cmd_create')
+		##
+		pan_box.Add(self.cmd_create,pos=(8,0),flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT|wx.LEFT,border=2)
+		pan_box.SetItemSpan(self.cmd_create, wx.GBSpan(1,4))
+		self.cmd_create.Enable(False)
 		
 		# put erry thang in sizer
 		panel.SetSizerAndFit(pan_box)
@@ -344,8 +379,14 @@ class QCWindow(wx.Frame):
 				print("GENERATING RSA+RSA keypair (4096-bit)...")
 				# GENERATE & DUMP RSA KEYS
 				ca_pub, ca_priv = asymmetric.generate_pair('rsa',bit_size=4096)
-				f = os.open(self.data_wspace.pathForFile('ca_priv.key'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
-				f2 = os.open(self.data_wspace.pathForFile('ca_pub.key'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+				
+				try:
+					f = os.open(self.data_wspace.pathForFile('ca_priv.key'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+					f2 = os.open(self.data_wspace.pathForFile('ca_pub.key'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+				except AttributeError:
+					f = os.open(self.data_wspace.pathForFile('ca_priv.key'),os.O_CREAT|os.O_RDWR)
+					f2 = os.open(self.data_wspace.pathForFile('ca_pub.key'),os.O_CREAT|os.O_RDWR)
+				
 				os.write(f, asymmetric.dump_private_key(ca_priv,thePassword))
 				os.write(f2, asymmetric.dump_public_key(ca_pub))
 				os.fsync(f)
@@ -371,13 +412,23 @@ class QCWindow(wx.Frame):
 				builder.extended_key_usage = self.data_exkeyusage.getOIDSet() # Set&Save our ExtendedKeyUsagii here
 				builder.serial_number = CreateSerialNumber() # 			# We be of needin's a serial, lads
 				ca_certificate = builder.build(ca_priv)
-				f3 = os.open(self.data_wspace.pathForFile('root_ca.crt'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+				
+				try:
+					f3 = os.open(self.data_wspace.pathForFile('root_ca.crt'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+				except AttributeError:
+					f3 = os.open(self.data_wspace.pathForFile('root_ca.crt'),os.O_CREAT|os.O_RDWR)
+				
 				os.write(f3, certbuilder.pem_armor_certificate(ca_certificate))
 				os.fsync(f3)
 				os.close(f3)
 				print("SAVED ROOT CA :-) :\n\t{0}".format(self.data_wspace.pathForFile('root_ca.crt')))
 				# SAVE THE SERIAL AS A .SRL
-				f5 = os.open(self.data_wspace.pathForFile('root_ca.srl'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+				
+				try:
+					f5 = os.open(self.data_wspace.pathForFile('root_ca.srl'),os.O_CREAT|os.O_RDWR|os.O_BINARY)
+				except AttributeError:
+					f5 = os.open(self.data_wspace.pathForFile('root_ca.srl'),os.O_CREAT|os.O_RDWR)
+				
 				self.data_ca_props = dict(
 					{
 						'subject_fields': certbuildInput,
@@ -409,6 +460,8 @@ class QCWindow(wx.Frame):
 				
 				print("\nSUCCESS!!! You can now export your newly forged Root CA via `Save Workspace` under `File`.")
 		
+		# enable csr items and indicate we now have a CA loaded in program
+		self.enableCSRItems()
 		return self.genned_ca(True)
 	
 	def OnFileExit(self, *event):
@@ -611,6 +664,7 @@ def OFirstSetup(tupleWindoze):
 		windo.genned_ca(True)
 		windo.gen_ca.Disable()
 		windo.gen_ca.SetLabel("[LOADED CA.]")
+		windo.enableCSRItems()
 		# Update tooltips
 		wx.PostEvent(windo, UpdateKeyUsages())
 
