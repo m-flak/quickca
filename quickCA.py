@@ -158,10 +158,11 @@ class QCWindow(wx.Frame):
 		self.btn_tipeku = None
 		self.req_create = None
 		self.cmd_create = None
+		self.cmd_createnew = None
 		
 		# csr stuff from the bottom part of the dialog box
 		# THESE ARE THE IDS THAT SHALL BE ASSIGNED TO THE CSR GEN ITEMS
-		self.csr_item_ids = [32449, 32448, 32447]
+		self.csr_item_ids = [32449, 32448, 32447, 32446]
 		
 		#menu
 		self.mainmenu = self.createMainMenu()
@@ -238,7 +239,7 @@ class QCWindow(wx.Frame):
 	def createControls(self):
 		self.SetBackgroundColour(wx.Colour(240,240,240))
 		panel = wx.Panel(self)
-		pan_box = wx.GridBagSizer(8,4)
+		pan_box = wx.GridBagSizer(9,4)
 
 		# First prompt
 		pan_box.Add(wx.StaticText(self, -1, "Enter below information (comma separated) for gen\'d root CA:"),pos=(0,0),flag=wx.EXPAND|wx.TOP|wx.LEFT,border=2)
@@ -316,6 +317,13 @@ class QCWindow(wx.Frame):
 		pan_box.SetItemSpan(self.cmd_create, wx.GBSpan(1,4))
 		self.cmd_create.Enable(False)
 		
+		## button 3
+		self.cmd_createnew = wx.Button(panel, self.csr_item_ids[3], label="Create CSR -then- Generate Certificate",style=wx.ALIGN_CENTRE,name='cmd_createnew')
+		##
+		pan_box.Add(self.cmd_createnew,pos=(9,0),flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT|wx.LEFT,border=2)
+		pan_box.SetItemSpan(self.cmd_createnew, wx.GBSpan(1,4))
+		self.cmd_createnew.Enable(False)
+
 		# put erry thang in sizer
 		panel.SetSizerAndFit(pan_box)
 		
