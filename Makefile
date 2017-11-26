@@ -23,7 +23,7 @@ FILES_RT  = quickCA.py \
 #### TODO:  INSTALL
 ### ALL ### 
 
-.PHONY: deps-pip deps-wx create-prbin quick-ca all clean 
+.PHONY: deps-pip deps-wx create-prbin quick-ca all clean locally 
 
 all: deps-pip create-prbin quick-ca
 
@@ -60,4 +60,8 @@ deps-pip: deps-wx
 
 deps-wx:
 	apt-get build-dep wx-common  
-	
+
+locally:
+	touch ./.yaynay
+
+

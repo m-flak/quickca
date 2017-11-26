@@ -48,6 +48,28 @@ There are a few ways to execute *quickCA* sanely under \*nix...
 
 - * Say, *"Screw the launcher!"*, and do what it does manually thru: ```QC_FM=<path to filemanager executable> ./quickCA.py```
 
+Installation
+============
+Normally, you'd just run ```./quickCA.py```, and be done with it; __however__, because I'd like for *quickCA* to be fully installable and usable within the Linux environment. There's a *Makefile* provided, so you can do it the kewl gmake way or the python way. __THE CHOICE IS YOURS!!!__ If you're planning to run from your */home dir* or whatnot, I recommend just ignoring this section. All this added complexity-- well, it's just to show my stuff off for you-- future employer... :wink:
+
+<span>
+<div style="position: relative; min-height: 56px; display: table; margin-left: 5%; background-color: rgba(111,122,144,0.25); background-size: cover; border: 2px dotted #880cde" id="inote-windoze"><p style="position: absolute; top: -24px; font-weight: bold; box-shadow: inset 0 -16px 0 0 rgba(188,94,255,0.33); background: linear-gradient(to bottom, #faeedf, rgb(188,94,255)); border-bottom: 3px solid rgba(111,122,144,0.75); padding-bottom: 1px; padding-left: 6px;">Check it out :</p><p style="position: relative; background-color: #909090; opacity: 0.44;"> == ***Windows users,***  *Feel free to skip over this section; it doesn't apply to y'all...* == :wave: :grinning: </p></div>
+</span>
+
+Replace the sub-command ```make locally``` with ```make install``` if you're planning to install **quickCA** to your system at *$PREFIX*... ... .. .*__Otherwise,__* run the below command before you execute the script:
+	
+
+    make && make locally
+
+
+----------
+
+<span>
+<div style="max-width: 45%; min-width: 25%; min-height: 24px; max-height: 32px; border-left: 4px dotted #880cde; border-right: 4px dotted #880cde;">
+<p style="font-weight: bold; box-shadow: inset 0 -16px 0 0 rgba(188,94,255,0.33); background: linear-gradient(to bottom, #faeedf, rgb(188,94,255)); border-bottom: 3px solid rgba(111,122,144,0.75); padding-bottom: 1px; padding-left: 6px;">JUST KEEP IN MIND :</p></div></span>
+
+**MAKE LOCALLY == running from proj. directory**
+**MAKE INSTALL == install to /usr/what/eva**
 Changelog
 ============
 These are essentially milestone versions, reflected by:  ```__version__``` and ```__version_info__``` respectively. Always assume that the latest version is ***master*** here on *tha git*  :grin:
