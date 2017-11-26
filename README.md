@@ -41,9 +41,12 @@ The same as above applies here as well. However, don't forget to:
 
 ######**Linux-specific Usagii:**
 There are a few ways to execute *quickCA* sanely under \*nix...
-	* Execute ```./quickCA.py``` directly.
-	* Use the __launcher__ ```./launcher.sh <path to filemanager executable>```
-	* Say, *"Screw the launcher!"*, and do what it does manually thru: ```QC_FM=<path to filemanager executable> ./quickCA.py```
+
+- * Execute ```./quickCA.py``` directly.
+
+- * Use the __launcher__ ```./launcher.sh <path to filemanager executable>```
+
+- * Say, *"Screw the launcher!"*, and do what it does manually thru: ```QC_FM=<path to filemanager executable> ./quickCA.py```
 
 Changelog
 ============
