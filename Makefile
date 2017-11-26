@@ -20,12 +20,12 @@ FILES_RT  = quickCA.py \
 # 1st -> output
 # 2nd -> pre-output
 # ./bin/*.* COPIED O'ER TO /usr/local/bin
-#### TODO: ADD PIP DEP CHECK, INSTALL
+#### TODO:  INSTALL
 ### ALL ### 
 
-.PHONY: create-prbin quick-ca all clean 
+.PHONY: deps-pip deps-wx create-prbin quick-ca all clean 
 
-all: create-prbin quick-ca
+all: deps-pip create-prbin quick-ca
 
 .SUFFIXES: .py .sh
 
@@ -49,6 +49,15 @@ bin/quick-ca.sh :
 
 ### CLEAN ###
 clean:
-	rm -rf ./bin
+	rm -rf ./bin ; \
+	rm -rf ./.yaynay
 
+### PIP DEPENDS ###
+#### FOR WX'S b**** a** ####
 
+deps-pip: deps-wx
+	$(CMD_PIP) install -r requirements.txt
+
+deps-wx:
+	apt-get build-dep wx-common  
+	
