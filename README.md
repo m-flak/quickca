@@ -37,12 +37,14 @@ You can just click on quickCA.py or execute it from the command line.
 The same as above applies here as well. However, don't forget to:
 	
 
-    chmod a+x ./quickCA.py
+    chmod a+x ./quickCA.py && chmod a+x ./launcher.sh
 
-**(Linux Only)** Currently, for the *Explore Directory* menu option to you'll need to execute quickCA as follows:
+######**Linux-specific Usagii:**
+There are a few ways to execute *quickCA* sanely under \*nix...
+	* Execute ```./quickCA.py``` directly.
+	* Use the __launcher__ ```./launcher.sh <path to filemanager executable>```
+	* Say, *"Screw the launcher!"*, and do what it does manually thru: ```QC_FM=<path to filemanager executable> ./quickCA.py```
 
-    QC_FM=/path/to/your/fm ./quickCA.py
-   
 Changelog
 ============
 These are essentially milestone versions, reflected by:  ```__version__``` and ```__version_info__``` respectively. Always assume that the latest version is ***master*** here on *tha git*  :grin:
