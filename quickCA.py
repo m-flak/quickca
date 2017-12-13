@@ -49,6 +49,7 @@ from certbuilder import CertificateBuilder
 #@
 import cryptography.x509.extensions as x509_ext
 import cryptography.x509.oid as x509_oid
+import cryptography.x509.base as x509_base
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 import asn1crypto.x509 as x509_asn1
@@ -117,6 +118,10 @@ class QCertEKU(object):
 			blist.append(b)
 		bstr = "SA: %s CA: %s CS: %s E-M: %s TS: %s IPEND: %s IPTUN: %s IPUSR: %s" % (blist[0], blist[1], blist[2], blist[3], blist[4], blist[5], blist[6], blist[7])
 		return bstr
+	# RETURNS list x509 oid object from list of dotted strings
+	def listifyAsClasses(self, former):
+		return [x509.ObjectIdentifier(x) for x in former]
+	
 
 ####  Our temporary working folder
 # Temp folder
@@ -319,7 +324,7 @@ class QCWindow(wx.Frame):
 		
 		## button 3
 		self.cmd_createnew = wx.Button(panel, self.csr_item_ids[3], label="Create CSR -then- Generate Certificate",style=wx.ALIGN_CENTRE,name='cmd_createnew')
-		##
+		self.Bind(wx.EVT_BUTTON, self.onClick_CreateCSR, self.cmd_createnew)
 		pan_box.Add(self.cmd_createnew,pos=(9,0),flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT|wx.LEFT,border=2)
 		pan_box.SetItemSpan(self.cmd_createnew, wx.GBSpan(1,4))
 		self.cmd_createnew.Enable(False)
@@ -471,6 +476,52 @@ class QCWindow(wx.Frame):
 		# enable csr items and indicate we now have a CA loaded in program
 		self.enableCSRItems()
 		return self.genned_ca(True)
+	
+	def onClick_CreateCSR(self, event):
+		# extension list for the CSR buider
+		# lookie below...
+		def make_csrextz():
+			ac = self.data_exkeyusage.getOIDSet()
+			bc = self.data_exkeyusage.listifyAsClasses(ac)
+			
+			# extension list
+			c = []
+			
+			c.append(self.data_keyusage)
+			c.append(x509.ExtendedKeyUsage(bc))
+			return c
+		
+		# be cool and inform user about this method
+		#
+		# log
+		print("\n[OPTION THREE] - Generating CSR _AND_ the resulting certificate!!!\n")
+		wx_dialogs.alertDialog(self,message="The certificate signing request (CSR) that you are generating via QuickCA gets its info from your loaded root CA cert...\n\nClick OK to continue.")
+		
+		### CN / COMMON NAME BECOMES THE SUBJECT FIELD
+		csrbuilder = x509_base.CertificateSigningRequestBuilder(self.fieldsfromInput(self.city_state_cunt.GetValue(), self.common_organ.GetValue())[3], make_csrextz())
+		
+		### WE HAVE KEYUSAGE AND EXT. KEY USAGE ALREADY
+		### LET'S ADD THE CONSTRAINTS THO...
+		csrbuilder = csrbuilder.add_extension(
+			x509.BasicConstraints(ca=False, path_length=None), critical=True,
+		)
+		
+		### GENERATE CSR PUB/PRIV PAIR
+		# log
+		print("GENERATING RSA 4096+4096 KEYPAIR...\n")
+		csr_pub, csr_priv = asymmetric.generate_pair('rsa',bit_size=4096)
+		print("Asking for a new pass-phrase for this pair...\n")
+		csr_pasta = wx_dialogs.textEntryDialog(self,"Enter thou art\'s most secret pass-phrase:\nIf thee wisheth, ye may utilise the default: \'password\'.","Input thy pass-phrase:",'password',wx.OK|wx.CANCEL|wx.TE_PASSWORD).text
+		
+		### save these keyz
+		with open(self.data_wspace.pathForFile('csr_priv.key'), 'w+b') as cspr:
+			with open(self.data_wspace.pathForFile('csr_pub.key'), 'w+b') as cspu:
+				cspr.write(asymmetric.dump_private_key(csr_priv, csr_pasta))
+				cspu.write(asymmetric.dump_public_key(csr_pub))
+		
+		print("Keypair *.key files outputted to this current project's workspace. Now, signing the Request for the generation of a Certificate...\n")
+		
+		return
 	
 	def OnFileExit(self, *event):
 		self.Close()
