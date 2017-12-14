@@ -20,6 +20,7 @@
 #		- - genned with quickCA
 # 0.0.7 - full generation of Root CA's into temp folder along w/
 #			pub & priv keys.
+import copy
 import os
 import secrets
 import logging
@@ -52,6 +53,7 @@ import cryptography.x509.oid as x509_oid
 import cryptography.x509.base as x509_base
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
 import asn1crypto.x509 as x509_asn1
 from oscrypto import asymmetric
 
@@ -478,18 +480,16 @@ class QCWindow(wx.Frame):
 		return self.genned_ca(True)
 	
 	def onClick_CreateCSR(self, event):
-		# extension list for the CSR buider
-		# lookie below...
-		def make_csrextz():
-			ac = self.data_exkeyusage.getOIDSet()
-			bc = self.data_exkeyusage.listifyAsClasses(ac)
+		# for subject, damn guys, POD is good sometimes, sheesh
+		def make_subby(sarray):
+			titletxt = "{0} Issued Certificate".format(sarray[4]) # 4 -> ORG NAME
+			#													  # 3 -> COMMON NAME
 			
-			# extension list
-			c = []
-			
-			c.append(self.data_keyusage)
-			c.append(x509.ExtendedKeyUsage(bc))
-			return c
+			proper = x509.Name([
+				x509.NameAttribute(x509_oid.NameOID.COMMON_NAME,sarray[3]),
+				x509.NameAttribute(x509_oid.NameOID.TITLE,titletxt),
+			])
+			return proper
 		
 		# be cool and inform user about this method
 		#
@@ -498,7 +498,7 @@ class QCWindow(wx.Frame):
 		wx_dialogs.alertDialog(self,message="The certificate signing request (CSR) that you are generating via QuickCA gets its info from your loaded root CA cert...\n\nClick OK to continue.")
 		
 		### CN / COMMON NAME BECOMES THE SUBJECT FIELD
-		csrbuilder = x509_base.CertificateSigningRequestBuilder(self.fieldsfromInput(self.city_state_cunt.GetValue(), self.common_organ.GetValue())[3], make_csrextz())
+		csrbuilder = x509_base.CertificateSigningRequestBuilder(make_subby(self.fieldsfromInput(self.city_state_cunt.GetValue(), self.common_organ.GetValue())))
 		
 		### WE HAVE KEYUSAGE AND EXT. KEY USAGE ALREADY
 		### LET'S ADD THE CONSTRAINTS THO...
@@ -514,12 +514,20 @@ class QCWindow(wx.Frame):
 		csr_pasta = wx_dialogs.textEntryDialog(self,"Enter thou art\'s most secret pass-phrase:\nIf thee wisheth, ye may utilise the default: \'password\'.","Input thy pass-phrase:",'password',wx.OK|wx.CANCEL|wx.TE_PASSWORD).text
 		
 		### save these keyz
+		pppr = None
 		with open(self.data_wspace.pathForFile('csr_priv.key'), 'w+b') as cspr:
 			with open(self.data_wspace.pathForFile('csr_pub.key'), 'w+b') as cspu:
 				cspr.write(asymmetric.dump_private_key(csr_priv, csr_pasta))
 				cspu.write(asymmetric.dump_public_key(csr_pub))
+				
+				csr_priv = pppr = serialization.load_pem_private_key(asymmetric.dump_private_key(csr_priv, csr_pasta), csr_pasta.encode(), default_backend())
+				
 		
 		print("Keypair *.key files outputted to this current project's workspace. Now, signing the Request for the generation of a Certificate...\n")
+		
+		the_csr_itself = csrbuilder.sign(csr_priv, hashes.SHA256(), default_backend())
+		
+		print("CSR successfully created.")
 		
 		return
 	
