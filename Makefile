@@ -1,5 +1,8 @@
 # Makefile :^)
 
+# handle depsss
+include pip.mk
+
 # the basicsss...
 PREFIX=/usr/local
 PRJFIX=`pwd`
@@ -8,6 +11,9 @@ PRBIN_DIR=${PRJFIX}/bin
 
 # COMMANDS TO INVOKE
 CMD_PIP=pip3
+CMD_INSTALL=/usr/bin/install
+CMD_INSTDATA=${CMD_INSTALL} -m 644 -o root -g root
+CMD_INSTEXEC=${CMD_INSTALL} -m 755 -o root -g root
 
 # FILES TO mcHANDLE
 FILES_BIN = bin/quickCA.py \
@@ -20,12 +26,13 @@ FILES_RT  = quickCA.py \
 # 1st -> output
 # 2nd -> pre-output
 # ./bin/*.* COPIED O'ER TO /usr/local/bin
-#### TODO:  INSTALL
+
 ### ALL ### 
 
-.PHONY: deps-pip deps-wx create-prbin quick-ca all clean locally 
+.PHONY: deps-pip deps-wx create-prbin quick-ca all clean locally \
+	install uninstall
 
-all: deps-pip create-prbin quick-ca
+all: ${PRETARGETS} create-prbin quick-ca
 
 .SUFFIXES: .py .sh
 
@@ -52,14 +59,27 @@ clean:
 	rm -rf ./bin ; \
 	rm -rf ./.yaynay
 
+### INSTALL ###
+install: all
+	cd ./bin; \
+	$(CMD_INSTEXEC) quick-ca.sh $(BIN_DIR) ; \
+	$(CMD_INSTEXEC) quickCA.py $(BIN_DIR)
+
+### UNINSTALL ###
+uninstall:
+	rm -f $(BIN_DIR)/quick-ca.sh && \
+	rm -f $(BIN_DIR)/quickCA.py
+
 ### PIP DEPENDS ###
 #### FOR WX'S b**** a** ####
 
 deps-pip: deps-wx
-	$(CMD_PIP) install -r requirements.txt
+	$(CMD_PIP) install -r requirements.txt; \
+	touch ./.PIP-DEPENDS
 
 deps-wx:
-	apt-get build-dep wx-common  
+	sudo apt-get build-dep wx-common || \
+	echo -e "\nBUILD-DEP FAILED... OH WELL...\n"
 
 locally:
 	touch ./.yaynay
