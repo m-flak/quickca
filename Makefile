@@ -7,7 +7,11 @@ include pip.mk
 PREFIX=/usr/local
 PRJFIX=`pwd`
 BIN_DIR=${PREFIX}/bin
+FONTS_DIR=${PREFIX}/share/fonts/truetype
 PRBIN_DIR=${PRJFIX}/bin
+
+# fonts
+KBFONT=${FONTS_DIR}/keyboard
 
 # COMMANDS TO INVOKE
 CMD_PIP=pip3
@@ -61,14 +65,18 @@ clean:
 
 ### INSTALL ###
 install: all
+	mkdir -p $(KBFONT) ; \
 	cd ./bin; \
 	$(CMD_INSTEXEC) quick-ca.sh $(BIN_DIR) ; \
-	$(CMD_INSTEXEC) quickCA.py $(BIN_DIR)
+	$(CMD_INSTEXEC) quickCA.py $(BIN_DIR) ; \
+	cd ../share/fonts/truetype/keyboard; \
+	$(CMD_INSTDATA) keyboard-regular.ttf $(KBFONT)
 
 ### UNINSTALL ###
 uninstall:
 	rm -f $(BIN_DIR)/quick-ca.sh && \
-	rm -f $(BIN_DIR)/quickCA.py
+	rm -f $(BIN_DIR)/quickCA.py; \
+	rm -rf $(KBFONT)
 
 ### PIP DEPENDS ###
 #### FOR WX'S b**** a** ####
