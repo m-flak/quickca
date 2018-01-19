@@ -64,6 +64,7 @@ __version_info__ = (0, 0, 9)
 # ## GLOBALSsss ## #
 MainWindow = None
 FaylDialog = None
+PrefixNIX = '/usr/local/'
 UpdateKeyUsages, EVT_UPDATE_KUS_EVENT = wx.lib.newevent.NewEvent()
 
 #### Support for the common Extended Key Usage fields found in x509
@@ -768,6 +769,20 @@ def OFirstQuesto():
 	
 	return OFirstSetup(OFirstQuesto())
 
+#### LOCAL-RUN OR GLOBAL RUN CHECK ####
+def DetectRunType():
+	global PrefixNIX	
+	def ospncwd():
+		return os.path.normcase(os.getcwd())
+	
+	ynfile = os.path.join(''.join([ospncwd(),'/']), '.yaynay')
+
+	if os.path.isfile(ynfile) is True:
+		PrefixNIX = ospncwd()
+		print("*NIX PREFIX PATH CHANGED TO: {0}".format(PrefixNIX))
+	
+	return
+
 #### MAIN ##############################################
 def Main():
 	global MainWindow
@@ -775,6 +790,10 @@ def Main():
 	logging.basicConfig()
 	app = wx.App(redirect=False)
 
+	# support for loadable resrc's
+	#if running w/o install => search local dir for rsrc paths
+	DetectRunType()
+	
 	# setup workspace
 	wspace = QCWorkspace()
 	print("Working in: {0}".format(wspace.getWorkspace()))
