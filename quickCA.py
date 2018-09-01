@@ -57,6 +57,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 import asn1crypto.x509 as x509_asn1
 from oscrypto import asymmetric
 
+
 # ## verinfo ## #
 __version__ = '0.0.9'
 __version_info__ = (0, 0, 9)
@@ -780,6 +781,7 @@ def DetectRunType():
 	if os.path.isfile(ynfile) is True:
 		PrefixNIX = ospncwd()
 		print("*NIX PREFIX PATH CHANGED TO: {0}".format(PrefixNIX))
+		PrefixNIX = ''.join([PrefixNIX, '/'])
 	
 	return
 
