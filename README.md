@@ -71,10 +71,11 @@ Replace the sub-command ```make locally``` with ```make install``` if you're pla
 
 These are essentially milestone versions, reflected by:  ```__version__``` and ```__version_info__``` respectively. Always assume that the latest version is ***master*** here on *tha git*  :grin:
 
-##### **Latest Milestone: *0.0.9***
+##### **Latest Milestone: *0.1.0***
 
 ----------
 
+* __0.1.0__ \- Disabling and enabling of KeyUsage and ExtendedKeyUsage via the F1-F9 keys for the former and Shift-F1-F8 keys for the latter
 * __0.0.9__ \- Root CA's (that are in a quickCA zip project can now be imported into the program
 	* Some very minor UI cleanups
 	* Groundwork laid for allowing altering of KeyUsage and ExtendedKeyUsage through the GUI.
