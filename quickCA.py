@@ -2,7 +2,7 @@
 # coding: utf-8
 #
 # quickCA.py ~ a GUI for fast certificates- legitimate or otherwise
-# (C) 2017 Matthew E. Kehrer <matthew@kehrer.pro>
+# (C) 2017-2018 Matthew E. Kehrer <matt91.mek@gmail.com>
 #	~ ~ This script is open source software according to GNU LGPL ~ ~
 # DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 ##.DEPENDENCIES.............................................
@@ -10,6 +10,8 @@
 ##..........................................................
 # DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 # changelog:
+# 0.1.0 - Disabling and enabling of KeyUsage and ExtendedKeyUsage via the
+#			F1-F9 keys for the former and Shift-F1-F8 keys for the latter
 # 0.0.9 - Root CA's (that are in a quickCA zip project can now be import
 #			-ed into the program
 #		- - Some very minor UI cleanups
@@ -21,6 +23,7 @@
 # 0.0.7 - full generation of Root CA's into temp folder along w/
 #			pub & priv keys.
 import copy
+import enum
 import os
 import secrets
 import logging
@@ -59,14 +62,35 @@ from oscrypto import asymmetric
 
 
 # ## verinfo ## #
-__version__ = '0.0.9'
-__version_info__ = (0, 0, 9)
+__version__ = '0.1.0'
+__version_info__ = (0, 1, 0)
 
 # ## GLOBALSsss ## #
 MainWindow = None
 FaylDialog = None
 PrefixNIX = '/usr/local/'
 UpdateKeyUsages, EVT_UPDATE_KUS_EVENT = wx.lib.newevent.NewEvent()
+
+#### Enumeration to assist logic for Function-Key accelerators
+# These shall be used for modifying the key usages
+class KeyUsageFlags(enum.Enum):
+	DIGITAL_SIG      = enum.auto() #F1
+	CONTENT_COMMIT   = enum.auto() #F2
+	KEY_ENCIPH       = enum.auto() #F3
+	DATA_ENCIPH      = enum.auto() #F4
+	KEY_AGREE        = enum.auto() #F5
+	CRT_SIGN         = enum.auto() #F6
+	CRL_SIGN         = enum.auto() #F7
+	ONLY_ENCIPH      = enum.auto() #F8
+	ONLY_DECIPH      = enum.auto() #F9
+	SERVER_AUTH      = enum.auto() #Shift-F1
+	CLIENT_AUTH      = enum.auto() #Shift-F2
+	CODE_SIGN        = enum.auto() #Shift-F3
+	EMAIL_SIGN       = enum.auto() #Shift-F4
+	TIMESTAMPING     = enum.auto() #Shift-F5
+	IP_SEC_END       = enum.auto() #Shift-F6
+	IP_SEC_TUN       = enum.auto() #Shift-F7
+	IP_SEC_USR       = enum.auto() #Shift-F8
 
 #### Support for the common Extended Key Usage fields found in x509
 # member self.OIDs is of type: cryptography.x509.oid.ObjectIdentifier
@@ -192,6 +216,193 @@ class QCWindow(wx.Frame):
 		self.createControls()
 		wx.PostEvent(self, UpdateKeyUsages())
 	
+	### KU & EKU modifier ###
+	def modifyKeyUsages(self, enum_val):
+		old1 = self.data_keyusage
+		old2 = self.data_exkeyusage.BoolParams
+		
+		if enum_val is KeyUsageFlags.DIGITAL_SIG:
+			self.data_keyusage = x509_ext.KeyUsage(TickBoolean(old1._digital_signature),
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.CONTENT_COMMIT:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  TickBoolean(old1._content_commitment),
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.KEY_ENCIPH:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  TickBoolean(old1._key_encipherment),
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.DATA_ENCIPH:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  TickBoolean(old1._data_encipherment),
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.KEY_AGREE:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  TickBoolean(old1._key_agreement),
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.CRT_SIGN:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  TickBoolean(old1._key_cert_sign),
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.CRL_SIGN:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  TickBoolean(old1._crl_sign),
+										  old1._encipher_only,
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.ONLY_ENCIPH:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  TickBoolean(old1._encipher_only),
+										  old1._decipher_only
+										  )
+			return
+		elif enum_val is KeyUsageFlags.ONLY_DECIPH:
+			self.data_keyusage = x509_ext.KeyUsage(old1._digital_signature,
+										  old1._content_commitment,
+										  old1._key_encipherment,
+										  old1._data_encipherment,
+										  old1._key_agreement,
+										  old1._key_cert_sign,
+										  old1._crl_sign,
+										  old1._encipher_only,
+										  TickBoolean(old1._decipher_only)
+										  )
+			return
+		elif enum_val is KeyUsageFlags.SERVER_AUTH:
+			self.data_exkeyusage = QCertEKU(TickBoolean(old2[0][1]),
+											   old2[1][1],
+											   old2[2][1],
+											   old2[3][1],
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.CLIENT_AUTH:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   TickBoolean(old2[1][1]),
+											   old2[2][1],
+											   old2[3][1],
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.CODE_SIGN:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   old2[1][1],
+											   TickBoolean(old2[2][1]),
+											   old2[3][1],
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.EMAIL_SIGN:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   old2[1][1],
+											   old2[2][1],
+											   TickBoolean(old2[3][1]),
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.TIMESTAMPING:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   old2[1][1],
+											   old2[2][1],
+											   old2[3][1],
+											   TickBoolean([4][1]),
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.IP_SEC_END:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   old2[1][1],
+											   old2[2][1],
+											   old2[3][1],
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.IP_SEC_TUN:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   old2[1][1],
+											   old2[2][1],
+											   old2[3][1],
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		elif enum_val is KeyUsageFlags.IP_SEC_USR:
+			self.data_exkeyusage = QCertEKU(old2[0][1],
+											   old2[1][1],
+											   old2[2][1],
+											   old2[3][1],
+											   old2[4][1],
+											   (True,True,True)
+											   )
+			return
+		
+	
 	### Array of fields for certbuilder
 	# # # (L)LOCALITY -> (ST)STATE -> (C)COUNTRY -> (CN) COMMON-NAME -> (O)ORGANIZATION
 	def fieldsfromInput(self, csc, cooo):
@@ -269,30 +480,26 @@ class QCWindow(wx.Frame):
 		pan_box.Add(wx.StaticText(self, 32666, "Key Usage:",style=wx.ALIGN_LEFT),pos=(3,0),flag=wx.EXPAND|wx.LEFT|wx.RIGHT,border=2)
 		self.FindWindow(32666).Enable(False)
 		self.FindWindow(32666).SetBackgroundColour(wx.Colour(192,192,197))
-		###TODO: LET USR PICK THIS STUFF
 		# KeyUsage Tooltip button
 		self.btn_tipku = wx.Button(panel, -1, label="♠", style=wx.BORDER_NONE|wx.BU_EXACTFIT, name='btn_tipku')
 		self.btn_tipku.SetBackgroundColour(wx.Colour(0,0,140))
 		self.btn_tipku.SetForegroundColour(wx.Colour(192,232,255))
 		self.Bind(wx.EVT_BUTTON, self.OnTipKU, self.btn_tipku)
 		pan_box.Add(self.btn_tipku, pos=(3,1))
-		###TODO: LET USR PICK THIS STUFF
-		pan_box.Add(wx.StaticText(self, 32664, "(ALL ENABLED)",style=wx.ALIGN_CENTRE|wx.ALIGN_LEFT),pos=(3,2),flag=wx.EXPAND|wx.RIGHT,border=2)
+		pan_box.Add(wx.StaticText(self, 32664, "(F1-F9)",style=wx.ALIGN_CENTRE|wx.ALIGN_LEFT),pos=(3,2),flag=wx.EXPAND|wx.RIGHT,border=2)
 		self.FindWindow(32664).Enable(False)
 		self.FindWindow(32664).SetBackgroundColour(wx.Colour(192,192,197))
 		# third prompt
 		pan_box.Add(wx.StaticText(self, 32662, "Extended Key Usage:",style=wx.ALIGN_LEFT),pos=(4,0),flag=wx.EXPAND|wx.LEFT|wx.RIGHT,border=2)
 		self.FindWindow(32662).Enable(False)
 		self.FindWindow(32662).SetBackgroundColour(wx.Colour(192,192,197))
-		###TODO: LET USR PICK THIS STUFF
 		# ExKeyUsage Tooltip button
 		self.btn_tipeku = wx.Button(panel, -1, label="♠", style=wx.BORDER_NONE|wx.BU_EXACTFIT, name='btn_tipeku')
 		self.btn_tipeku.SetBackgroundColour(wx.Colour(0,0,140))
 		self.btn_tipeku.SetForegroundColour(wx.Colour(192,232,255))
 		self.Bind(wx.EVT_BUTTON, self.OnTipEKU, self.btn_tipeku)
 		pan_box.Add(self.btn_tipeku, pos=(4,1))
-		###TODO: LET USR PICK THIS STUFF
-		pan_box.Add(wx.StaticText(self, 32660, "(ALL ENABLED)",style=wx.ALIGN_CENTRE|wx.ALIGN_LEFT),pos=(4,2),flag=wx.EXPAND|wx.RIGHT,border=2)
+		pan_box.Add(wx.StaticText(self, 32660, "(Shift F1-F8)",style=wx.ALIGN_CENTRE|wx.ALIGN_LEFT),pos=(4,2),flag=wx.EXPAND|wx.RIGHT,border=2)
 		self.FindWindow(32660).Enable(False)
 		self.FindWindow(32660).SetBackgroundColour(wx.Colour(192,192,197))
 		
@@ -360,6 +567,10 @@ class QCWindow(wx.Frame):
 		self.tippy_eku.SetDrawHeaderLine(True)
 		self.tippy_ku.SetTarget(self.btn_tipku)
 		self.tippy_eku.SetTarget(self.btn_tipeku)
+		
+		# add key press event to the two input boxes, which have focus by default
+		self.city_state_cunt.Bind(wx.EVT_KEY_DOWN, self.OnKeyPress)
+		self.common_organ.Bind(wx.EVT_KEY_DOWN, self.OnKeyPress)
 		
 		self.SetAutoLayout(True)
 		
@@ -594,6 +805,66 @@ class QCWindow(wx.Frame):
 		self.tippy_eku.Show(True)
 		return
 	
+	def OnKeyPress(self, event):
+		keycode = event.GetKeyCode()
+		shifted = event.ShiftDown()
+		
+		print("{0}".format(keycode))
+		
+		if keycode == wx.WXK_F1 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.DIGITAL_SIG)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F1 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.SERVER_AUTH)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F2 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.CONTENT_COMMIT)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F2 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.CLIENT_AUTH)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F3 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.KEY_ENCIPH)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F3 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.CODE_SIGN)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F4 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.DATA_ENCIPH)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F4 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.EMAIL_SIGN)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F5 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.KEY_AGREE)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F5 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.TIMESTAMPING)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F6 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.CRT_SIGN)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F6 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.IP_SEC_END)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F7 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.CRL_SIGN)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F7 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.IP_SEC_TUN)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F8 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.ONLY_ENCIPH)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F8 and shifted:
+			self.modifyKeyUsages(KeyUsageFlags.IP_SEC_USR)
+			wx.PostEvent(self, UpdateKeyUsages())
+		elif keycode == wx.WXK_F9 and not shifted:
+			self.modifyKeyUsages(KeyUsageFlags.ONLY_DECIPH)
+			wx.PostEvent(self, UpdateKeyUsages())
+		
+		event.Skip()
+	
 #### >functional language
 #### >no goto's
 #    >implying
@@ -666,6 +937,13 @@ def ToolTippifyKeyUsage(keyusago):
 	lstrl.append(field_text('DECONL', keyusago._decipher_only))
 	
 	return ' '.join(lstrl)
+
+### Tick a Boolean
+def TickBoolean(boolean) -> bool:
+	if boolean is True:
+		return False
+	else:
+		return True
 
 ############################################################
 #``````` ACTUAL PROGRAM FLOW IS BELOW ```````
