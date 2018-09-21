@@ -457,7 +457,6 @@ class QCWindow(wx.Frame):
 	
 	# create controls
 	def createControls(self):
-		self.SetBackgroundColour(wx.Colour(240,240,240))
 		panel = wx.Panel(self)
 		pan_box = wx.GridBagSizer(9,4)
 
@@ -809,7 +808,6 @@ class QCWindow(wx.Frame):
 		keycode = event.GetKeyCode()
 		shifted = event.ShiftDown()
 		
-		print("{0}".format(keycode))
 		
 		if keycode == wx.WXK_F1 and not shifted:
 			self.modifyKeyUsages(KeyUsageFlags.DIGITAL_SIG)
